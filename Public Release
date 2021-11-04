@@ -1,0 +1,142 @@
+#!/bin/bash
+
+# Check if root
+user=$(whoami)
+if [[ "$user" != "root" ]];
+then
+	echo "Error: Must be run as root"
+	exit
+fi
+
+# Crontab
+crontime="0 1 * * 4 root /bin/bash /scripts/automaticupdates"
+
+# This is what Grep looks for inside of crontime to see if it's there or not. It struggles to look for the entire thing due to (*) character, so this is the alternative.
+searchquery="automaticupdates"
+
+# Hostname
+hostname=$(hostname)
+
+# Enter your email + smtp server
+useremail="EMAIL@EMAIL.COM"
+smtpserver="smtp.example.com"
+
+# Strings for email
+emailserver="set smtp=$smtpserver"
+fromaddress="set from="$useremail""
+
+# Github Links (edit these to change where it pulls scripts from)
+adjoin="https://raw.githubusercontent.com/gorgdel/Linux-ADJoin/master/ad-join"
+automaticupdates="https://raw.githubusercontent.com/gycict/Debian-Linux-Automatic-Updates/master/automaticupdates"
+
+# Create Scripts Directory
+
+ if [ ! -d /scripts/ ]
+  then
+  mkdir /scripts/
+  echo "Directory Created"
+  sleep 0.5
+fi
+
+# Install Dependacies
+
+apt-get -q update
+apt-get -y install \
+  apt-transport-https \
+  ca-certificates \
+  curl \
+  gnupg \
+  lsb-release \
+  bsd-mailx \
+  realmd \
+  ntp \
+  adcli \
+  sssd \
+  libnss-sss \
+  libpam-sss \
+  packagekit \
+  libsss-sudo \
+  samba-common-bin \
+  sudo \
+  dialog
+
+
+# Check for Mail settings
+
+if grep -q "$emailserver" /etc/mail.rc;
+  then
+		echo 'exists'
+	else
+		echo 'does not exist...adding'
+		echo "$emailserver" >> /etc/mail.rc
+		echo "$fromaddress" >> /etc/mail.rc
+		echo 'added...'
+fi
+
+# Dialog
+
+HEIGHT=15
+WIDTH=40
+CHOICE_HEIGHT=4
+TITLE="Automatic Linux Installation"
+MENU="Choose one of the following options:
+Please Select Carefully"
+
+OPTIONS=(1 "AD-Join (Servers)"
+         2 "Automatic Updates"
+				 3 "Full Installation")
+
+CHOICE=$(dialog --clear \
+                --backtitle "$BACKTITLE" \
+                --title "$TITLE" \
+                --menu "$MENU" \
+                $HEIGHT $WIDTH $CHOICE_HEIGHT \
+                "${OPTIONS[@]}" \
+                2>&1 >/dev/tty)
+
+clear
+
+case $CHOICE in
+        1) #AD-Join
+          curl -L "$adjoin" --output /scripts/adjoin-server
+          bash /scripts/adjoin-server
+          ;;
+
+        2) #Create Automatic Updates
+          curl -L "$automaticupdates" --output /scripts/automaticupdates
+          chmod +x /scripts/automaticupdates
+
+					if grep -q "$searchquery" /etc/crontab;
+					  then
+							echo 'exists'
+						else
+							echo 'does not exist...adding'
+							echo "$crontime" >> /etc/crontab
+							echo 'added...'
+					fi
+          ;;
+
+        3) #Full Installation
+
+        echo "starting ad-join"
+        curl -L "$adjoin" --output /scripts/adjoin
+        bash /scripts/adjoin-servers
+				echo "Complete"
+				sleep 2
+				#Updates
+        echo "starting automatic-updates"
+        curl -L "$automaticupdates" --output /scripts/automaticupdates
+        chmod +x /scripts/automaticupdates
+
+				#Crontab
+				if grep -q "$searchquery" /etc/crontab;
+					then
+						echo 'exists'
+					else
+						echo 'does not exist...adding'
+						echo "$crontime" >> /etc/crontab
+						echo 'added...'
+				fi
+        ;;
+
+esac
