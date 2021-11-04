@@ -14,16 +14,13 @@ crontime="0 1 * * 4 root /bin/bash /scripts/automaticupdates"
 # This is what Grep looks for inside of crontime to see if it's there or not. It struggles to look for the entire thing due to (*) character, so this is the alternative.
 searchquery="automaticupdates"
 
-# Hostname
-hostname=$(hostname)
-
 # Enter your email + smtp server
 useremail="EMAIL@EMAIL.COM"
 smtpserver="smtp.example.com"
 
 # Strings for email
 emailserver="set smtp=$smtpserver"
-fromaddress="set from="$useremail""
+fromaddress="set from=$useremail"
 
 # Github Links (edit these to change where it pulls scripts from)
 adjoin="https://raw.githubusercontent.com/gorgdel/Linux-ADJoin/master/ad-join"
