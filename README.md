@@ -4,3 +4,7 @@ Very basic ADJoin/AutoUpdate install.
 ```
 curl -L "https://raw.githubusercontent.com/gorgdel/Linux-AD-AutoUpdate-Setup/master/Public%20Release" -o auto-setup.script
 ```
+# Usage
+```
+bash auto-setup.script
+```
