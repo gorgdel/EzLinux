@@ -24,7 +24,7 @@ fromaddress="set from=$useremail"
 
 # Github Links (edit these to change where it pulls scripts from)
 adjoin="https://raw.githubusercontent.com/gorgdel/Linux-ADJoin/master/ad-join"
-automaticupdates="https://raw.githubusercontent.com/gycict/Debian-Linux-Automatic-Updates/master/automaticupdates"
+automaticupdates="https://raw.githubusercontent.com/gorgdel/Debian-Linux-Automatic-Updates/master/automaticupdates"
 
 # Create Scripts Directory
 
