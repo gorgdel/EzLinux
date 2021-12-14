@@ -1,5 +1,6 @@
 #!/bin/bash
 
+
 # Check if root
 user=$(whoami)
 if [[ "$user" != "root" ]];
@@ -9,28 +10,23 @@ then
 fi
 
 # Crontab
-crontime="0 1 * * 4 root /bin/bash /scripts/automaticupdates"
+crontime="0 1 * * 4 root /bin/bash $directory/automaticupdates"
 
 # This is what Grep looks for inside of crontime to see if it's there or not. It struggles to look for the entire thing due to (*) character, so this is the alternative.
 searchquery="automaticupdates"
-
-# Enter your email + smtp server
-useremail="EMAIL@EMAIL.COM"
-smtpserver="smtp.example.com"
-
-# Strings for email
-emailserver="set smtp=$smtpserver"
-fromaddress="set from=$useremail"
 
 # Github Links (edit these to change where it pulls scripts from)
 adjoin="https://raw.githubusercontent.com/gorgdel/Linux-ADJoin/master/ad-join"
 automaticupdates="https://raw.githubusercontent.com/gorgdel/Debian-Linux-Automatic-Updates/master/automaticupdates"
 
+# File Location
+directory="/scripts"
+
 # Create Scripts Directory
 
- if [ ! -d /scripts/ ]
+ if [ ! -d $directory/ ]
   then
-  mkdir /scripts/
+  mkdir $directory/
   echo "Directory Created"
   sleep 0.5
 fi
@@ -54,24 +50,155 @@ apt-get -y install \
   packagekit \
   libsss-sudo \
   samba-common-bin \
-  sudo \
-  dialog
+  sudo
 
 
-# Check for Mail settings
 
-if grep -q "$emailserver" /etc/mail.rc;
-  then
-		echo 'exists'
-	else
-		echo 'does not exist...adding'
-		echo "$emailserver" >> /etc/mail.rc
-		echo "$fromaddress" >> /etc/mail.rc
-		echo 'added...'
-fi
+# Settings Menu
+settings () {
+    HEIGHT1=15
+    WIDTH1=45
+    CHOICE_HEIGHT1=4
+    TITLE1="Settings"
+    MENU1="Choose one of the following options:"
 
-# Dialog
+    OPTIONS1=("<-- Back" "Return to the main menu "
+							"AD Settings" "")
 
+    CHOICE2=$(whiptail --clear \
+            --backtitle "$BACKTITLE1" \
+            --title "$TITLE1" \
+            --menu "$MENU1" \
+            $HEIGHT1 $WIDTH1 $CHOICE_HEIGHT1 \
+            "${OPTIONS1[@]}" \
+        2>&1 >/dev/tty)
+
+    clear
+
+    case $CHOICE2 in
+
+			"<-- Back")
+			main
+			;;
+
+			"AD Settings")
+			ad-settings
+			;;
+esac
+
+}
+
+
+# AD Settings
+ad-settings (){
+	HEIGHT1=10
+	WIDTH1=40
+	CHOICE_HEIGHT1=3
+	TITLE1="AD Settings"
+	MENU1="Choose one of the following options:"
+
+	OPTIONS1=("Change AD Domain" ""
+						"Set AD Account" ""
+						"Set OU" "")
+
+	CHOICE2=$(whiptail --clear \
+					--backtitle "$BACKTITLE1" \
+					--title "$TITLE1" \
+					--menu "$MENU1" \
+					$HEIGHT1 $WIDTH1 $CHOICE_HEIGHT1 \
+					"${OPTIONS1[@]}" \
+			2>&1 >/dev/tty)
+
+	clear
+
+	case $CHOICE2 in
+
+		"Change AD Domain")
+
+		if [ ! -f $directory/adjoin ]
+		 then
+		 curl -L "$adjoin" --output $directory/adjoin
+	 fi
+
+	 		domain=$(\
+  		whiptail --title "Choose AD Domain" \
+      --inputbox "Enter Domain Name:" 8 40 \
+  			3>&1 1>&2 2>&3 3>&- \
+				)
+				exitstatus=$?
+				if [ $exitstatus = 0 ]; then
+
+					olddomain=$(grep "domain=" $directory/adjoin)
+	 			 sed -i "s/$olddomain/domain=$domain/g" $directory/adjoin
+			 else
+				 ad-settings
+			 fi
+
+			 olddomain=$(grep "domain=" $directory/adjoin)
+			 sed -i "s/$olddomain/domain=$domain/g" $directory/adjoin
+
+			 ad-settings
+
+				;;
+
+				"Set AD Account")
+
+				if [ ! -f $directory/adjoin ]
+				 then
+				 curl -L "$adjoin" --output $directory/adjoin
+			 fi
+
+				username=$(
+	  		whiptail --title "AD Username & Password" \
+	      --inputbox "Enter Domain Username:" 8 40 \
+				--ok-button "Set Username" \
+	  			3>&1 1>&2 2>&3 3>&- \
+					)
+
+					exitstatus=$?
+					if [ $exitstatus = 0 ]; then
+
+						olddomainuser=$(grep "domain_user=" $directory/adjoin)
+	 				 sed -i "s/$olddomainuser/domain_user=$username/g" $directory/adjoin
+				 else
+					 ad-settings
+				 fi
+
+					password=$(whiptail --passwordbox "Enter Your Password" 8 70 \
+					--title "New Password" \
+					3>&1 1>&2 2>&3 3>&- \
+					)
+
+					exitstatus=$?
+					if [ $exitstatus = 0 ]; then
+						olddomainpassword=$(grep "domain_user_password=" $directory/adjoin)
+						sed -i "s/$olddomainpassword/domain_user_password=$password/g" $directory/adjoin
+				 else
+					 ad-settings
+				 fi
+
+				 ad-settings
+
+					;;
+
+					"Set OU")
+					ou=$(\
+					whiptail --title "Change OU" \
+					--inputbox "Enter OU                            			                     Use Distingused Name: OU=,OU=,DC=,DC=" 10 50 \
+					3>&1 1>&2 2>&3 3>&- \
+					)
+
+					ad-settings
+					;;
+
+
+	esac
+
+}
+
+
+# Whip
+main (){
 HEIGHT=15
 WIDTH=40
 CHOICE_HEIGHT=4
@@ -79,12 +206,12 @@ TITLE="Automatic Linux Installation"
 MENU="Choose one of the following options:
 Please Select Carefully"
 
-OPTIONS=(1 "AD-Join (Servers)"
-         2 "Automatic Updates"
-				 3 "Full Installation")
+OPTIONS=(	"AD-Join" ""
+         "Automatic Updates" ""
+				 "Full Installation" ""
+				 "Settings"	"")
 
-CHOICE=$(dialog --clear \
-                --backtitle "$BACKTITLE" \
+CHOICE=$(whiptail --clear \
                 --title "$TITLE" \
                 --menu "$MENU" \
                 $HEIGHT $WIDTH $CHOICE_HEIGHT \
@@ -94,14 +221,14 @@ CHOICE=$(dialog --clear \
 clear
 
 case $CHOICE in
-        1) #AD-Join
-          curl -L "$adjoin" --output /scripts/adjoin-server
-          bash /scripts/adjoin-server
+        "AD-Join") #AD-Join
+          curl -L "$adjoin" --output $directory/adjoin-server
+          bash $directory/adjoin-server
           ;;
 
-        2) #Create Automatic Updates
-          curl -L "$automaticupdates" --output /scripts/automaticupdates
-          chmod +x /scripts/automaticupdates
+        "Automatic Updates") #Create Automatic Updates
+          curl -L "$automaticupdates" --output $directory/automaticupdates
+          chmod +x $directory/automaticupdates
 
 					if grep -q "$searchquery" /etc/crontab;
 					  then
@@ -113,17 +240,17 @@ case $CHOICE in
 					fi
           ;;
 
-        3) #Full Installation
+        "Full Installation") #Full Installation
 
         echo "starting ad-join"
-        curl -L "$adjoin" --output /scripts/adjoin
-        bash /scripts/adjoin-servers
+        curl -L "$adjoin" --output $directory/adjoin
+        bash $directory/adjoin-servers
 				echo "Complete"
 				sleep 2
 				#Updates
         echo "starting automatic-updates"
-        curl -L "$automaticupdates" --output /scripts/automaticupdates
-        chmod +x /scripts/automaticupdates
+        curl -L "$automaticupdates" --output $directory/automaticupdates
+        chmod +x $directory/automaticupdates
 
 				#Crontab
 				if grep -q "$searchquery" /etc/crontab;
@@ -136,4 +263,11 @@ case $CHOICE in
 				fi
         ;;
 
+				"Settings") #Settings
+				settings
+				;;
 esac
+}
+
+
+main
