@@ -18,6 +18,7 @@ searchquery="automaticupdates"
 # Github Links (edit these to change where it pulls scripts from)
 adjoin="https://raw.githubusercontent.com/gorgdel/Linux-ADJoin/master/adjoin"
 automaticupdates="https://raw.githubusercontent.com/gorgdel/Debian-Linux-Automatic-Updates/master/automaticupdates"
+bashrc="https://raw.githubusercontent.com/gorgdel/Linux-Server-Setup/master/files/bash.bashrc"
 
 # File Location
 directory="/scripts"
@@ -31,44 +32,25 @@ directory="/scripts"
   sleep 0.5
 fi
 
-# Install Dependacies
 
-apt-get -q update
-apt-get -y install \
-  apt-transport-https \
-  ca-certificates \
-  curl \
-  gnupg \
-  lsb-release \
-  bsd-mailx \
-  realmd \
-  ntp \
-  adcli \
-  sssd \
-  libnss-sss \
-  libpam-sss \
-  packagekit \
-  libsss-sudo \
-  samba-common-bin \
-  sudo
-
-
-
-# Settings Menu
 settings () {
     HEIGHT1=15
-    WIDTH1=45
-    CHOICE_HEIGHT1=4
+    WIDTH1=65
+    CHOICE_HEIGHT1=6
     TITLE1="Settings"
     MENU1="Choose one of the following options:"
 
     OPTIONS1=("<-- Back" "Return to the main menu "
-							"AD Settings" "")
+							"AD Settings" " --> "
+              "Enable Root SSH" ""
+              "Disable Root SSH" ""
+              "Add Better Colours to Terminal/Configs" "")
 
     CHOICE2=$(whiptail --clear \
             --backtitle "$BACKTITLE1" \
             --title "$TITLE1" \
             --menu "$MENU1" \
+            --nocancel \
             $HEIGHT1 $WIDTH1 $CHOICE_HEIGHT1 \
             "${OPTIONS1[@]}" \
         2>&1 >/dev/tty)
@@ -84,6 +66,38 @@ settings () {
 			"AD Settings")
 			ad-settings
 			;;
+
+      "Enable Root SSH")
+        if (whiptail --title "SSH Settings" --yesno "This is potentially dangerous. SSH Will restart." 8 78); then
+        sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+        systemctl restart sshd
+      else
+        settings
+      fi
+
+      whiptail --title "Root SSH Changed" --msgbox "Root SSH Successfully Enabled" 8 78
+      settings
+      ;;
+
+        "Disable Root SSH")
+        if (whiptail --title "SSH Settings" --yesno "This will disable Root SSH. SSH Will restart." 8 78); then
+        sed -i 's/PermitRootLogin yes/#PermitRootLogin prohibit-password/' /etc/ssh/sshd_config
+        systemctl restart sshd
+      else
+        settings
+      fi
+
+      whiptail --title "Root SSH Changed" --msgbox "Root SSH Successfully Disabled" 8 78
+      settings
+      ;;
+
+      "Add Better Colours to Terminal/Configs")
+      rm /etc/bash.bashrc
+      curl -L "$bashrc" --output /etc/bash.bashrc
+      whiptail --title "Bashrc Updated" --msgbox "Reboot Required To See Changes" 8 78
+      settings
+      ;;
+
 esac
 
 }
@@ -92,12 +106,13 @@ esac
 # AD Settings
 ad-settings (){
 	HEIGHT1=10
-	WIDTH1=40
-	CHOICE_HEIGHT1=3
+	WIDTH1=45
+	CHOICE_HEIGHT1=4
 	TITLE1="AD Settings"
 	MENU1="Choose one of the following options:"
 
-	OPTIONS1=("Change AD Domain" ""
+	OPTIONS1=("<-- Back" "Return to the main menu "
+						"Change AD Domain" ""
 						"Set AD Account" ""
 						"Set OU" "")
 
@@ -105,6 +120,7 @@ ad-settings (){
 					--backtitle "$BACKTITLE1" \
 					--title "$TITLE1" \
 					--menu "$MENU1" \
+					--nocancel \
 					$HEIGHT1 $WIDTH1 $CHOICE_HEIGHT1 \
 					"${OPTIONS1[@]}" \
 			2>&1 >/dev/tty)
@@ -112,6 +128,10 @@ ad-settings (){
 	clear
 
 	case $CHOICE2 in
+
+		"<-- Back")
+		settings
+		;;
 
 		"Change AD Domain")
 
@@ -202,14 +222,13 @@ main (){
 HEIGHT=15
 WIDTH=40
 CHOICE_HEIGHT=4
-TITLE="Automatic Linux Installation"
-MENU="Choose one of the following options:
-Please Select Carefully"
+TITLE="EZLinux"
+MENU="Choose one of the following options:"
 
 OPTIONS=(	"AD-Join" ""
          "Automatic Updates" ""
 				 "Full Installation" ""
-				 "Settings"	"")
+				 "Settings"	" --> ")
 
 CHOICE=$(whiptail --clear \
                 --title "$TITLE" \
@@ -269,5 +288,37 @@ case $CHOICE in
 esac
 }
 
+run-updates () {
 
-main
+if [ ! -f "/etc/ezlinux.d/silent-updates.conf" ]; then
+  mkdir /etc/ezlinux.d/
+  touch /etc/ezlinux.d/silent-updates.conf
+  echo "silent-updates=true" >> /etc/ezlinux.d/silent-updates.conf
+  whiptail --title "Install Packages" --msgbox "Please Install required packages" 8 78
+    apt-get update
+    apt-get -y install \
+    apt-transport-https \
+    ca-certificates \
+    curl \
+    gnupg \
+    lsb-release \
+    bsd-mailx \
+    realmd \
+    ntp \
+    adcli \
+    sssd \
+    git \
+    libnss-sss \
+    libpam-sss \
+    packagekit \
+    libsss-sudo \
+    samba-common-bin \
+    sudo
+    whiptail --title "Installed Packages" --msgbox "Packages have been installed Successfully" 8 78
+    main
+    else
+      main
+    fi
+}
+
+run-updates
