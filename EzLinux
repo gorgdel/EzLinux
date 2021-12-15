@@ -16,9 +16,9 @@ crontime="0 1 * * 4 root /bin/bash $directory/automaticupdates"
 searchquery="automaticupdates"
 
 # Github Links (edit these to change where it pulls scripts from)
-adjoin="https://raw.githubusercontent.com/gorgdel/Linux-ADJoin/master/adjoin"
-automaticupdates="https://raw.githubusercontent.com/gorgdel/Debian-Linux-Automatic-Updates/master/automaticupdates"
-bashrc="https://raw.githubusercontent.com/gorgdel/Linux-Server-Setup/master/files/bash.bashrc"
+adjoin="https://raw.githubusercontent.com/gorgdel/EzLinux/master/files/adjoin"
+automaticupdates="https://raw.githubusercontent.com/gorgdel/EzLinux/master/files/automaticupdates"
+bashrc="https://raw.githubusercontent.com/gorgdel/EzLinux/master/files/bash.bashrc"
 
 # File Location
 directory="/scripts"
