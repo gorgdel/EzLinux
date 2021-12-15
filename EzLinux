@@ -246,8 +246,9 @@ clear
 
 case $CHOICE in
         "AD-Join") #AD-Join
-          curl -L "$adjoin" --output $directory/adjoin-server
-          bash $directory/adjoin-server
+          curl -L "$adjoin" --output $directory/adjoin
+          bash $directory/adjoin
+					sleep 2
 					whiptail --title "AD-Join Installed" --msgbox "AD-Join Installed Successfully" 8 78
 	        main
           ;;
@@ -271,7 +272,7 @@ case $CHOICE in
 
         echo "starting ad-join"
         curl -L "$adjoin" --output $directory/adjoin
-        bash $directory/adjoin-servers
+        bash $directory/adjoin
 				echo "Complete"
 				sleep 2
 				#Updates
@@ -288,6 +289,7 @@ case $CHOICE in
 						echo "$crontime" >> /etc/crontab
 						echo 'added...'
 				fi
+				whiptail --title "AD-Join Installed" --msgbox "AD-Join Installed Successfully" 8 78
 				main
         ;;
 
