@@ -7,10 +7,9 @@ Very basic ADJoin/AutoUpdate install.
 
 # Install
 
-`wget https://git.io/JDuBu -O EzLinux && chmod +x EzLinux && sudo ./EzLinux'
+`wget https://git.io/JDuBu -O EzLinux && chmod +x EzLinux && sudo ./EzLinux`
 
 # Usage
 ```
 Arrow keys to navigate
-
 ```
