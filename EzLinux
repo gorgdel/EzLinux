@@ -351,6 +351,10 @@ if [ ! -f "/etc/ezlinux.d/silent-updates.conf" ]; then
     adcli \
     sssd \
     git \
+    sendmail-cf \ 
+    sendmail-base \ 
+    sendmail-bin \ 
+    sendmail-do \
     libnss-sss \
     libpam-sss \
     packagekit \
