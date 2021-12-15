@@ -154,9 +154,7 @@ ad-settings (){
 				 ad-settings
 			 fi
 
-			 olddomain=$(grep "domain=" $directory/adjoin)
-			 sed -i "s/$olddomain/domain=$domain/g" $directory/adjoin
-
+			 whiptail --title "Domain Changed" --msgbox "Domain Successfully Changed to $domain" 8 78
 			 ad-settings
 
 				;;
@@ -196,7 +194,7 @@ ad-settings (){
 				 else
 					 ad-settings
 				 fi
-
+				 whiptail --title "Username & Password Changed" --msgbox "Username & Password Successfully Changed" 8 78
 				 ad-settings
 
 					;;
@@ -207,7 +205,14 @@ ad-settings (){
 					--inputbox "Enter OU                            			                     Use Distingused Name: OU=,OU=,DC=,DC=" 10 50 \
 					3>&1 1>&2 2>&3 3>&- \
 					)
-
+          exitstatus=$?
+					if [ $exitstatus = 0 ]; then
+						oldou=$(grep "ou=" $directory/adjoin)
+						sed -i "s/$oldou/ou=$ou/g" $directory/adjoin
+				 else
+					 ad-settings
+				 fi
+         whiptail --title "OU Changed" --msgbox "OU Successfully Changed to $ou" 8 78
 					ad-settings
 					;;
 
@@ -243,6 +248,8 @@ case $CHOICE in
         "AD-Join") #AD-Join
           curl -L "$adjoin" --output $directory/adjoin-server
           bash $directory/adjoin-server
+					whiptail --title "AD-Join Installed" --msgbox "AD-Join Installed Successfully" 8 78
+	        main
           ;;
 
         "Automatic Updates") #Create Automatic Updates
@@ -257,6 +264,7 @@ case $CHOICE in
 							echo "$crontime" >> /etc/crontab
 							echo 'added...'
 					fi
+					main
           ;;
 
         "Full Installation") #Full Installation
@@ -280,6 +288,7 @@ case $CHOICE in
 						echo "$crontime" >> /etc/crontab
 						echo 'added...'
 				fi
+				main
         ;;
 
 				"Settings") #Settings
