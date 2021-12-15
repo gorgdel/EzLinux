@@ -14,7 +14,7 @@ Looking to make versions for arch/centos/RHLE
 
 # Usage
 ```
-Arrow keys to navigate :arrow_up: :arrow_down: :arrow_left: :arrow_right:
+Arrow keys to navigate + enter to select
 ```
 # Features
 :heavy_exclamation_mark: Dynamic Active Directory Usage - You can set the domain, AD Admin and OU directly from EzLinux
