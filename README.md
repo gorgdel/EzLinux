@@ -1,15 +1,15 @@
-# Linux Server Setup
+# EzLinux
 Very basic ADJoin/AutoUpdate install.
 
-<p align="center"><img width="80%" src="./images/linux-server-setup-picture.png" /></a></p>
+<p align="center"><img width="80%" src="./images/ezlinux-updated.png" /></a></p>
 
 <br />
 
 # Install
 ```
-curl -L "https://raw.githubusercontent.com/gorgdel/Linux-AD-AutoUpdate-Setup/master/Public%20Release" -o auto-setup.script
+curl -L "https://raw.githubusercontent.com/gorgdel/EzLinux/master/EzLinux" -o ezlinux && chmod +x ezlinux && ./ezlinux
 ```
 # Usage
 ```
-bash auto-setup.script
+
 ```
