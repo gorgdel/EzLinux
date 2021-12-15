@@ -50,6 +50,7 @@ settings () {
             --backtitle "$BACKTITLE1" \
             --title "$TITLE1" \
             --menu "$MENU1" \
+						--ok-button "Select" \
             --nocancel \
             $HEIGHT1 $WIDTH1 $CHOICE_HEIGHT1 \
             "${OPTIONS1[@]}" \
@@ -105,14 +106,14 @@ esac
 
 # AD Settings
 ad-settings (){
-	HEIGHT1=10
+	HEIGHT1=15
 	WIDTH1=45
-	CHOICE_HEIGHT1=4
+	CHOICE_HEIGHT1=5
 	TITLE1="AD Settings"
 	MENU1="Choose one of the following options:"
 
-	OPTIONS1=("<-- Back" "Return to the main menu "
-						"Change AD Domain" ""
+  OPTIONS1=("<-- Back" "Return to the settings "
+            "Change AD Domain" ""
 						"Set AD Account" ""
 						"Set OU" "")
 
@@ -120,7 +121,8 @@ ad-settings (){
 					--backtitle "$BACKTITLE1" \
 					--title "$TITLE1" \
 					--menu "$MENU1" \
-					--nocancel \
+          --ok-button "Select" \
+          --nocancel \
 					$HEIGHT1 $WIDTH1 $CHOICE_HEIGHT1 \
 					"${OPTIONS1[@]}" \
 			2>&1 >/dev/tty)
@@ -129,32 +131,31 @@ ad-settings (){
 
 	case $CHOICE2 in
 
-		"<-- Back")
-		settings
-		;;
+    "<-- Back")
+      settings
+      ;;
+
 
 		"Change AD Domain")
 
 		if [ ! -f $directory/adjoin ]
 		 then
 		 curl -L "$adjoin" --output $directory/adjoin
-	 fi
+   fi
 
-	 		domain=$(\
+    olddomain=$(grep "domain=" $directory/adjoin)
+    domain=$(\
   		whiptail --title "Choose AD Domain" \
-      --inputbox "Enter Domain Name:" 8 40 \
+      --inputbox "Enter Domain Name:\nCurrent $olddomain" 8 40 \
   			3>&1 1>&2 2>&3 3>&- \
 				)
 				exitstatus=$?
 				if [ $exitstatus = 0 ]; then
-
-					olddomain=$(grep "domain=" $directory/adjoin)
 	 			 sed -i "s/$olddomain/domain=$domain/g" $directory/adjoin
+         whiptail --title "Domain Changed" --msgbox "Domain Successfully Changed to $domain" 8 78
 			 else
 				 ad-settings
 			 fi
-
-			 whiptail --title "Domain Changed" --msgbox "Domain Successfully Changed to $domain" 8 78
 			 ad-settings
 
 				;;
@@ -166,6 +167,7 @@ ad-settings (){
 				 curl -L "$adjoin" --output $directory/adjoin
 			 fi
 
+
 				username=$(
 	  		whiptail --title "AD Username & Password" \
 	      --inputbox "Enter Domain Username:" 8 40 \
@@ -175,8 +177,7 @@ ad-settings (){
 
 					exitstatus=$?
 					if [ $exitstatus = 0 ]; then
-
-						olddomainuser=$(grep "domain_user=" $directory/adjoin)
+            olddomainuser=$(grep "domain_user=" $directory/adjoin)
 	 				 sed -i "s/$olddomainuser/domain_user=$username/g" $directory/adjoin
 				 else
 					 ad-settings
@@ -191,30 +192,41 @@ ad-settings (){
 					if [ $exitstatus = 0 ]; then
 						olddomainpassword=$(grep "domain_user_password=" $directory/adjoin)
 						sed -i "s/$olddomainpassword/domain_user_password=$password/g" $directory/adjoin
+            whiptail --title "Username & Password Changed" --msgbox "Username & Password Successfully Changed" 8 78
 				 else
 					 ad-settings
 				 fi
-				 whiptail --title "Username & Password Changed" --msgbox "Username & Password Successfully Changed" 8 78
+
 				 ad-settings
 
 					;;
 
+
 					"Set OU")
+
+					if [ ! -f $directory/adjoin ]
+					 then
+					 curl -L "$adjoin" --output $directory/adjoin
+				 fi
+
+          oldou=$(grep "ou=" $directory/adjoin)
 					ou=$(\
 					whiptail --title "Change OU" \
-					--inputbox "Enter OU                            			                     Use Distingused Name: OU=,OU=,DC=,DC=" 10 50 \
+					--inputbox "Enter OU\nUse Distingused Name: OU=,OU=,DC=,DC=\nCurrent $oldou" 10 78 \
 					3>&1 1>&2 2>&3 3>&- \
 					)
           exitstatus=$?
 					if [ $exitstatus = 0 ]; then
-						oldou=$(grep "ou=" $directory/adjoin)
 						sed -i "s/$oldou/ou=$ou/g" $directory/adjoin
+            whiptail --title "OU Changed" --msgbox "OU Successfully Changed to\n$ou" 8 78
 				 else
 					 ad-settings
 				 fi
-         whiptail --title "OU Changed" --msgbox "OU Successfully Changed to $ou" 8 78
-					ad-settings
+
+        whiptail --title "OU Changed" --msgbox "OU Successfully Changed to\n$ou" 8 78
+				ad-settings
 					;;
+
 
 
 	esac
@@ -226,18 +238,21 @@ ad-settings (){
 main (){
 HEIGHT=15
 WIDTH=40
-CHOICE_HEIGHT=4
+CHOICE_HEIGHT=5
 TITLE="EZLinux"
 MENU="Choose one of the following options:"
 
 OPTIONS=(	"AD-Join" ""
          "Automatic Updates" ""
 				 "Full Installation" ""
-				 "Settings"	" --> ")
+				 "Settings"	" --> "
+				 " <-- " "Exit")
 
 CHOICE=$(whiptail --clear \
                 --title "$TITLE" \
                 --menu "$MENU" \
+								--ok-button "Select" \
+								--nocancel \
                 $HEIGHT $WIDTH $CHOICE_HEIGHT \
                 "${OPTIONS[@]}" \
                 2>&1 >/dev/tty)
@@ -245,15 +260,26 @@ CHOICE=$(whiptail --clear \
 clear
 
 case $CHOICE in
+
+
         "AD-Join") #AD-Join
-				if (whiptail --title "AD Settings" --yesno "Have you set the AD Settings in the Settings tab?" 8 78); then
-				bash $directory/adjoin
-				whiptail --title "AD-Join Installed" --msgbox "AD-Join Installed Successfully" 8 78
-				sleep 2
-				main
-			else
-				ad-settings
-			fi
+
+				if [ ! -f /etc/ezlinux.d/ad-silence.conf ]; then
+        touch /etc/ezlinux.d/ad-silence.conf
+        whiptail --title "AD Settings" --msgbox "Set Up AD-Settings First" 8 78;
+        ad-settings
+        else
+          ou=$(grep "ou=" $directory/adjoin)
+          domain=$(grep "domain=" $directory/adjoin)
+          if (whiptail --title "AD Settings" --msgbox "Is this correct?\n$domain, $ou" 8 78); then
+          bash $directory/adjoin
+          whiptail --title "AD-Join Installed" --msgbox "AD-Join Installed Successfully" 8 78
+          main
+        else
+          ad-settings
+        fi
+
+        fi
           ;;
 
         "Automatic Updates") #Create Automatic Updates
@@ -277,7 +303,6 @@ case $CHOICE in
         curl -L "$adjoin" --output $directory/adjoin
         bash $directory/adjoin
 				echo "Complete"
-				sleep 2
 				#Updates
         echo "starting automatic-updates"
         curl -L "$automaticupdates" --output $directory/automaticupdates
@@ -298,6 +323,10 @@ case $CHOICE in
 
 				"Settings") #Settings
 				settings
+				;;
+
+				" <-- ")
+				exit
 				;;
 esac
 }
