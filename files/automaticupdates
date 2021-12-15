@@ -1,0 +1,51 @@
+#!/bin/bash
+
+# mail commands can be deleted, the logs will still work, emails just won't be sent.
+
+# Show current time and date
+TIME=$( date '+%I:%M:%S %p' )
+DATE=$( date '+%m-%d-%Y' )
+
+# Email Entry
+EMAIL=YOUR EMAIL HERE
+
+# Learn Hostname
+hostname=$(hostname)
+
+# Email Complete
+SUBJECT="Updates Complete on ${hostname}"
+MESSAGE="Updates Complete On ${hostname} at ${TIME} - Log files can be found at /var/log/apt/automaticsupdates/${DATE}-automaticupdates.log"
+
+# Email Failure
+FAILEDSUBJECT="Updates Failed to Complete on $hostname"
+FAILEDMSG="Updates Failed to Complete on ${hostname} at ${TIME} - Log files can be found at /var/log/apt/automaticsupdates/${DATE}-automaticupdates.log"
+
+# Create Directory
+if [ ! -d /var/log/apt/automaticupdates ]
+then
+    mkdir /var/log/apt/automaticupdates
+fi
+
+# Create New Log File
+touch /var/log/apt/automaticupdates/${DATE}-automaticupdates.log
+
+# Perform Updates
+result=$(apt update -q -y >> /var/log/apt/automaticupdates/${DATE}-automaticupdates.log)
+
+if [ "$result" = "Err:" ];
+then
+  mail -s "$FAILEDSUBJECT" $EMAIL <<< "$FAILEDMSG"
+  exit N
+fi
+
+# Perform Upgrade
+result=$(apt upgrade -q -y >> /var/log/apt/automaticupdates/${DATE}-automaticupdates.log)
+if [ "$result" = "E:" ];
+then
+  mail -s "$FAILEDSUBJECT" $EMAIL <<< "$FAILEDMSG"
+  exit N
+fi
+
+
+# Send Email on Completion
+mail -s "$SUBJECT" $EMAIL <<< "$MESSAGE"
