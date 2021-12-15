@@ -246,11 +246,15 @@ clear
 
 case $CHOICE in
         "AD-Join") #AD-Join
-          curl -L "$adjoin" --output $directory/adjoin
-          bash $directory/adjoin
-					sleep 2
-					whiptail --title "AD-Join Installed" --msgbox "AD-Join Installed Successfully" 8 78
-	        main
+				curl -L "$adjoin" --output $directory/adjoin
+				if (whiptail --title "AD Settings" --yesno "Have you set the AD Settings in the Settings tab?" 8 78); then
+				bash $directory/adjoin
+				whiptail --title "AD-Join Installed" --msgbox "AD-Join Installed Successfully" 8 78
+				sleep 2
+				main
+			else
+				ad-settings
+			fi
           ;;
 
         "Automatic Updates") #Create Automatic Updates
