@@ -1,0 +1,19 @@
+#!/bin/bash
+
+# Add Variables 
+ou=
+domain=
+domain_user=
+domain_user_password=
+
+echo $domain_user_password | realm join -U "$domain_user" --computer-ou "$ou" "$domain"
+systemctl enable sssd
+sed -i "/default_domain_suffix.*$/d" /etc/sssd/sssd.conf
+sed -i "s/\[sssd\]/[sssd]\ndefault_domain_suffix = $domain/g" /etc/sssd/sssd.conf
+sed -i "/simple_allow_groups *=.*$/d" /etc/sssd/sssd.conf
+sed -i "s/access_provider *=.*$/access_provider = simple\nsimple_allow_groups = domain admins@$domain/g" /etc/sssd/sssd.conf
+systemctl restart sssd
+systemctl restart sshd
+grep pam_mkhomedir.so /etc/pam.d/common-session
+echo "session required pam_mkhomedir.so skel=/etc/skel/ umask=0022" >> /etc/pam.d/common-session
+echo "%domain\ admins@$domain ALL=(ALL) ALL" > /etc/sudoers.d/domain_admins
