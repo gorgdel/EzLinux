@@ -6,10 +6,11 @@ Very basic ADJoin/AutoUpdate install.
 <br />
 
 # Install
-```
-curl -L "https://raw.githubusercontent.com/gorgdel/EzLinux/master/EzLinux" -o ezlinux && chmod +x ezlinux && ./ezlinux
-```
+
+`wget https://git.io/JDuBu -O EzLinux && chmod +x EzLinux && sudo ./EzLinux'
+
 # Usage
 ```
+Arrow keys to navigate
 
 ```
