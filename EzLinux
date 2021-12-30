@@ -353,7 +353,7 @@ if [ ! -f "/etc/ezlinux.d/silent-updates.conf" ]; then
     sssd \
     git \
     sendmail-cf \
-		sendmail-base \
+    sendmail-base \
     sendmail-bi \
     sendmail-do \
     libnss-sss \
